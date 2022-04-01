@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:interview/data/user.dart';
 import 'package:interview/data/mock_data.dart';
+import 'package:interview/widgets/custom_avatar.dart';
 
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key? key, required this.title}) : super(key: key);
@@ -13,9 +15,13 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final TextEditingController searchController = TextEditingController();
+  var allUsers = User.fromJsonToList(allData());
+  var selectedUsers = <User>[];
+  final _key = GlobalKey<FormState>();
 
   @override
   void initState() {
+    selectedUsers = allUsers;
     super.initState();
   }
 
@@ -26,26 +32,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    var allUsers = User.fromJsonToList(allData());
-    var selectedUsers = allUsers;
-    final _key = GlobalKey<FormState>();
-    _getUserAvatar(url) {
-      return CircleAvatar(
-        backgroundColor: Colors.grey[300],
-        child: url == null
-            ? Icon(
-                Icons.warning,
-              )
-            : Image(
-                image: NetworkImage(url),
-                errorBuilder: (ctx, obj, stackTrace) => Icon(
-                  Icons.warning,
-                ),
-              ),
-        radius: 40,
-      );
-    }
-
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
@@ -59,15 +45,15 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: TextFormField(
-                  onEditingComplete: () {
-                    print(searchController.text.toString());
+                  onChanged: (newVal) {
                     selectedUsers = allUsers
-                        .where((user) =>
-                            user.fullName.contains(searchController.text))
+                        .where((user) => user.fullName
+                            .toLowerCase()
+                            .contains(newVal.toLowerCase().trim()))
                         .toList();
                     setState(() {});
                   },
-                  // controller: searchController,
+                  controller: searchController,
                   autofocus: true,
                   decoration: InputDecoration(
                     hintText: 'Search...',
@@ -82,14 +68,14 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ),
             ),
-            Flexible(
+            Expanded(
               child: ListView.builder(
                 itemCount: selectedUsers.length,
                 itemBuilder: (context, index) {
                   final user = selectedUsers[index];
                   return ListTile(
                     minLeadingWidth: 50,
-                    leading: _getUserAvatar(user.avatar),
+                    leading: CustomAvatar(url: user.avatar),
                     title: Text(user.firstName + ' ' + user.lastName),
                     subtitle: Text(user.role),
                   );
